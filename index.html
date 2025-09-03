@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Isekai Foundry — OOP Single-File</title>
+<meta name="theme-color" content="#0b0d10" />
+<style>
+:root{
+  --bg:#0b0d10; --text:#eaf2ff; --muted:#9ab0c9; --card:#0f141b;
+  --line:#1e2735; --accent:#88e0ff; --accent2:#b592ff; --ok:#7cf58a; --warn:#ffd166; --danger:#ff6b6b;
+}
+:root[data-theme="light"]{
+  --bg:#f6f8fc; --text:#0c1016; --muted:#536277; --card:#ffffff; --line:#dee6f3; --accent:#0066cc; --accent2:#7a3cff; --ok:#0a7a44; --warn:#ad6a00; --danger:#b80d2e;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif}
+#app{max-width:920px;margin:0 auto;padding:14px}
+hr{border:none;border-top:1px solid var(--line);margin:12px 0}
+.card{background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 90%, #000 10%));border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 6px 22px rgba(0,0,0,.25)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;gap:10px}
+.grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.grid.cols-4{grid-template-columns:repeat(4,1fr)}
+.btn{background:color-mix(in srgb,var(--card) 88%, #000 12%);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer;transition:filter .15s ease}
+.btn:hover{filter:brightness(1.08)}
+.btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 16%, #000 84%), color-mix(in srgb,var(--accent) 6%, #000 94%));border-color:color-mix(in srgb,var(--accent) 40%, var(--line) 60%);color:#fff}
+.btn.ghost{background:transparent;border:1px dashed var(--line)}
+.btn.ok{background:linear-gradient(180deg,color-mix(in srgb,var(--ok) 18%, #000 82%), color-mix(in srgb,var(--ok) 6%, #000 94%));border-color:color-mix(in srgb,var(--ok) 40%, var(--line) 60%);color:#fff}
+.btn.warn{background:linear-gradient(180deg,color-mix(in srgb,var(--warn) 18%, #000 82%), color-mix(in srgb,var(--warn) 6%, #000 94%));border-color:color-mix(in srgb,var(--warn) 40%, var(--line) 60%);color:#fff}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:color-mix(in srgb,var(--card) 88%, #000 12%);border:1px solid var(--line);border-radius:999px;padding:6px 10px;display:flex;gap:6px;align-items:center;color:var(--muted)}
+.pill b{color:var(--text)}
+.tabs{display:flex;gap:8px;margin:10px 0}
+.tabbtn{flex:1;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 90%, #000 10%);color:var(--text);border-radius:12px;padding:10px 8px;cursor:pointer}
+.tabbtn[aria-selected="true"]{background:linear-gradient(180deg,color-mix(in srgb,var(--accent2) 8%, #000 92%), color-mix(in srgb,var(--accent2) 4%, #000 96%));border-color:color-mix(in srgb,var(--accent2) 40%, var(--line) 60%);color:#fff;box-shadow:0 4px 16px color-mix(in srgb,var(--accent2) 20%, #000 80%)}
+.section{display:none}
+.section.active{display:block;animation:fade .15s ease}
+@keyframes fade{from{opacity:.5;transform:translateY(2px)}to{opacity:1;transform:none}}
+.kv{display:flex;gap:12px;align-items:center}
+.kv svg{width:120px;height:120px;border-radius:12px;background:color-mix(in srgb,var(--card) 85%, #000 15%);border:1px solid var(--line)}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+.hint{color:var(--muted);font-size:12px}
+.badge{font-size:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 92%, #000 8%);color:var(--text);border-radius:999px;padding:2px 8px}
+.rarity{font-weight:700}
+.rS{color:#ffd38a}.rA{color:#9bd0ff}.rB{color:#b7ffa7}
+.statbar{height:8px;background:color-mix(in srgb,var(--card) 85%, #000 15%);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.statbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:color-mix(in srgb,var(--card) 90%, #000 10%);border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s, transform .2s}
+.toast.show{opacity:1;transform:translate(-50%,-4px)}
+.canvasWrap{background:color-mix(in srgb,var(--card) 85%, #000 15%);border:1px solid var(--line);border-radius:12px;padding:8px}
+.copybox{display:flex;gap:8px}.copybox input{flex:1}
+#summaryCvs{max-width:100%}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0 10px}
+kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:color-mix(in srgb,var(--card) 88%, #000 12%);border:1px solid var(--line);border-radius:6px;padding:0 6px}
+</style>
+</head>
+<body>
+<div id="app" role="application" aria-label="Isekai Foundry (OOP)">
+  <div class="topbar">
+    <div class="pills">
+      <span class="pill">🗝️ Seed: <b id="seedLbl">-</b></span>
+      <span class="pill">⭐ Legend: <b id="legendLbl">0</b></span>
+      <span class="pill">🧭 Mode: <b id="modeLbl">Casual</b></span>
+      <span class="pill">🎧 Sound: <b id="soundLbl">Off</b></span>
+      <span class="pill">🎨 Theme: <b id="themeLbl">Dark</b></span>
+    </div>
+    <div class="row">
+      <button class="btn ghost" id="btnTheme">切替</button>
+      <button class="btn ghost" id="btnSound">音ON/OFF</button>
+      <button class="btn ghost" id="btnCasual">Casual</button>
+      <button class="btn ghost" id="btnDaily">Daily</button>
+      <button class="btn" id="btnReset">Reset</button>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tabbtn" aria-selected="true"  data-tab="input">入力</button>
+    <button class="tabbtn" aria-selected="false" data-tab="bestow">授与</button>
+    <button class="tabbtn" aria-selected="false" data-tab="choose">選択</button>
+    <button class="tabbtn" aria-selected="false" data-tab="prologue">序章</button>
+    <button class="tabbtn" aria-selected="false" data-tab="result">結果/共有</button>
+    <button class="tabbtn" aria-selected="false" data-tab="codex">図鑑</button>
+    <button class="tabbtn" aria-selected="false" data-tab="packs">Pack</button>
+    <button class="tabbtn" aria-selected="false" data-tab="settings">設定</button>
+  </div>
+
+  <!-- INPUT -->
+  <section class="section active" id="sec-input">
+    <div class="card">
+      <h2>前世入力</h2>
+      <div class="grid cols-2">
+        <div><label>名前</label><input class="input" id="inName" placeholder="例: 斎藤ユウ" /></div>
+        <div><label>性別</label><select id="inGender" class="input"><option>不問</option><option>男性</option><option>女性</option><option>その他</option></select></div>
+        <div><label>年齢</label><input class="input" id="inAge" type="number" min="10" max="120" placeholder="29" /></div>
+        <div><label>職業</label><input class="input" id="inJob" placeholder="例: エンジニア" /></div>
+        <div class="grid cols-2" style="grid-column:1/-1">
+          <div><label>死因（穏当表現）</label><input class="input" id="inDeath" placeholder="事故/病/過労" /></div>
+          <div><label>夢（目標）</label><input class="input" id="inDream" placeholder="例: 世界を旅する" /></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="btnRand">ランダム</button>
+        <button class="btn primary" id="btnMake">生成</button>
+        <span class="hint">※入力はローカル保存。外部送信なし</span>
+      </div>
+    </div>
+    <hr>
+    <div class="card">
+      <h2>モードとシード</h2>
+      <div class="hint">Dailyは <kbd>?seed=YYYYMMDD</kbd> 固定・数値補正は無効（可視のみ）/ Casual は自由。</div>
+    </div>
+  </section>
+
+  <!-- BESTOWAL -->
+  <section class="section" id="sec-bestow">
+    <div class="card">
+      <div class="kv">
+        <svg id="avatar" viewBox="0 0 120 120" aria-label="Avatar"></svg>
+        <div style="flex:1">
+          <h2 id="worldName">異世界名</h2>
+          <div class="row"><span class="badge" id="worldTags"></span><span class="badge" id="startSpot"></span></div>
+          <table class="table" aria-label="ステータス"><tbody id="statTbody"></tbody></table>
+        </div>
+      </div>
+      <hr>
+      <h3>女神の授与（チート候補 ×3）</h3>
+      <div id="cheatList" class="grid cols-3"></div>
+      <div class="hint">※強力なほど「FD(運命債)」が高くなります</div>
+    </div>
+  </section>
+
+  <!-- CHOOSE -->
+  <section class="section" id="sec-choose">
+    <div class="card">
+      <h2>選択：チートを1つ選び、誓約でFDを軽減</h2>
+      <div id="chosenCheat" class="row"></div>
+      <h3>誓約（1つ）</h3>
+      <div class="grid cols-3" id="vowList"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="btnLockIn" disabled>誓約して進む</button>
+        <span class="hint">誓約は守るほど FD を軽減（下限0）</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROLOGUE / EVENTS -->
+  <section class="section" id="sec-prologue">
+    <div class="card">
+      <h2>プロローグ</h2>
+      <p id="goddessLine" class="hint">女神：「……ようこそ、新たな旅路へ」</p>
+      <div id="encCard" class="card"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="btnNextTurn">次へ</button>
+        <span class="hint">全3ターン＋<b>宿敵判定</b>。成功/失敗で伝説値(Legend)が増減</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT / SHARE -->
+  <section class="section" id="sec-result">
+    <div class="card">
+      <h2>結果 / 共有</h2>
+      <div class="grid cols-2">
+        <div class="canvasWrap"><canvas id="summaryCvs" width="600" height="800" aria-label="Summary image"></canvas></div>
+        <div>
+          <div id="resultText"></div>
+          <hr>
+          <div class="copybox"><input class="input" id="shareUrl" readonly /><button class="btn" id="btnCopy">URLコピー</button></div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn ok" id="btnSavePng">画像保存</button>
+            <button class="btn" id="btnReplay">もう一度</button>
+            <button class="btn" id="btnWebShare">Web Share</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODEX -->
+  <section class="section" id="sec-codex">
+    <div class="card">
+      <h2>図鑑 / コンプ率</h2>
+      <div class="row">
+        <span class="pill">祝福: <b id="codBless">0/0</b></span>
+        <span class="pill">称号: <b id="codTitles">0/0</b></span>
+        <span class="pill">邂逅: <b id="codEncounter">0/0</b></span>
+        <span class="pill">合計: <b id="codTotal">0%</b></span>
+      </div>
+      <div id="codexList" class="grid cols-3" style="margin-top:10px"></div>
+      <hr />
+      <h3>章解放</h3>
+      <div id="storyList" class="grid cols-2"></div>
+    </div>
+  </section>
+
+  <!-- PACKS -->
+  <section class="section" id="sec-packs">
+    <div class="card">
+      <h2>World Pack（Remix）</h2>
+      <p class="hint">JSON貼付で世界観/チート/遭遇カードを差し替え。破損時は適用しません。</p>
+      <textarea id="packJson" class="input" rows="10" placeholder='{"packId":"high-fantasy-v1", ... }'></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="btnApplyPack">適用</button>
+        <button class="btn ghost" id="btnLoadExample">例を挿入</button>
+      </div>
+      <hr />
+      <div class="hint">URL読み込み: <kbd>?packUrl=</kbd> も対応</div>
+    </div>
+  </section>
+
+  <!-- SETTINGS (Save import/export, PWA) -->
+  <section class="section" id="sec-settings">
+    <div class="card">
+      <h2>設定 / 保存</h2>
+      <div class="row">
+        <button class="btn" id="btnExport">セーブをエクスポート</button>
+        <label class="btn">
+          インポート<input type="file" id="fileImport" accept="application/json" style="display:none" />
+        </label>
+        <button class="btn ghost" id="btnRegisterSW">オフライン化（PWA）</button>
+      </div>
+      <div class="hint">GitHub Pages等のHTTPS環境でPWA登録できます。file://では不可。</div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/***********************
+ *  基盤ユーティリティ
+ ***********************/
+class Util{
+  static $(s){return document.querySelector(s)}
+  static $$(s){return Array.from(document.querySelectorAll(s))}
+  static el(tag,attrs={},children=[]){
+    const e=document.createElement(tag);
+    for(const [k,v] of Object.entries(attrs)){
+      if(k==='class') e.className=v; else if(k==='text') e.textContent=v; else if(k==='html') e.innerHTML=v;
+      else if(k.startsWith('on')&&typeof v==='function') e.addEventListener(k.slice(2),v);
+      else e.setAttribute(k,v);
+    }
+    for(const c of [].concat(children)) if(c) e.appendChild(c);
+    return e;
+  }
+  static clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+  static hash32(str){ let h=5381; for(let i=0;i<str.length;i++){ h=((h<<5)+h)+str.charCodeAt(i); h|=0; } return h>>>0; }
+  static todaySeed(){ const d=new Date(); const yyyy=d.getFullYear(); const mm=('0'+(d.getMonth()+1)).slice(-2); const dd=('0'+d.getDate()).slice(-2); return parseInt(`${yyyy}${mm}${dd}`,10); }
+  static toast(msg,ms=1400){ const t=Util.$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),ms) }
+}
+class RNG{
+  constructor(seed){ this.state=((seed>>>0)||1)>>>0; }
+  next(){ this.state = (1664525*this.state + 1013904223)>>>0; return this.state/4294967296; }
+  range(a,b){ return a + Math.floor(this.next()*(b-a+1)); }
+  pick(arr){ return arr[(this.next()*arr.length)|0]; }
+  chance(p){ return this.next()<p; }
+}
+class Sound{
+  static enabled=false; static ctx=null;
+  static toggle(){ this.enabled=!this.enabled; Util.$('#soundLbl').textContent=this.enabled?'On':'Off'; if(this.enabled && !this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch{} } }
+  static beep(ok=true){ if(!this.enabled||!this.ctx) return; const ctx=this.ctx; const o=ctx.createOscillator(); const g=ctx.createGain(); o.type='sine'; o.frequency.value= ok? 880: 220; g.gain.setValueAtTime(0.0001, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.15); o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.16); }
+}
+class Theme{
+  static current='dark';
+  static load(){ const v=localStorage.getItem('if_theme'); if(v) this.current=v; document.documentElement.dataset.theme = this.current==='light'?'light':''; Util.$('#themeLbl').textContent=this.current==='light'?'Light':'Dark'; }
+  static toggle(){ this.current = this.current==='light'?'dark':'light'; localStorage.setItem('if_theme', this.current); this.load(); }
+}
+
+/***********************
+ *  ドメインモデル
+ ***********************/
+class Profile{
+  constructor({name,gender,age,job,death,dream}){ Object.assign(this,{name,gender,age,job,death,dream}); }
+  static sanitizeDeath(s=''){
+    const rules=[[/suicide|自殺|self-harm|リスカ|自〇|首|毒|飛び/i,'不慮の事故'],[/murder|殺人|刺殺|銃|暴力死/i,'事故'],[/illness|病死|難病|がん|癌/i,'病'],[/overwork|過労|ブラック/i,'過労'],[/covid|コロナ/i,'病'],[/unknown|不明/i,'事故']];
+    for(const [re,rep] of rules){ if(re.test(s)) return rep; }
+    s=s.trim(); if(!s) s='事故'; if(s.length>12) s=s.slice(0,12); return s;
+  }
+  static fromInputs(){ const $=Util.$; return new Profile({ name:$('#inName').value.trim()||'旅人', gender:$('#inGender').value, age:Math.max(10,Math.min(120,parseInt($('#inAge').value||'25'))), job:$('#inJob').value.trim()||'自由業', death:Profile.sanitizeDeath($('#inDeath').value), dream:($('#inDream').value||'静かな暮らし').trim().slice(0,40) }); }
+  static randomizeToInputs(){ const $=Util.$; const names=['ユウト','ミナト','スズ','ハル','レン','アオイ']; const jobs=['エンジニア','料理人','教師','配達','学生','カメラマン']; $('#inName').value=names[(Math.random()*names.length)|0]; $('#inGender').value=['不問','男性','女性','その他'][(Math.random()*4)|0]; $('#inAge').value=18+((Math.random()*40)|0); $('#inJob').value=jobs[(Math.random()*jobs.length)|0]; $('#inDeath').value=['事故','病','過労'][(Math.random()*3)|0]; $('#inDream').value=['世界を旅する','静かな暮らし','最高の物語を書く','美味しい店を巡る'][(Math.random()*4)|0]; }
+  seed(){ return Util.hash32(`${this.name}|${this.gender}|${this.age}|${this.job}|${this.death}|${this.dream}`); }
+}
+class Stats{
+  constructor(map){ this.map=map }
+  static generate(seed){ const rng=new RNG(seed); const base=[50,50,50,50,50]; let pool=rng.range(100,140); while(pool--) base[rng.range(0,4)]++; const m={STR:base[0],DEX:base[1],INT:base[2],CHA:base[3],LUCK:base[4]}; return new Stats(m); }
+  get(k){return this.map[k]||50}
+}
+class World{
+  constructor({name,tags,spot}){ Object.assign(this,{name,tags,spot}); }
+  static build(seed, pack){ const rng=new RNG(seed); const pre=['アス','エル','リム','ノア','ヴァル','ミル','セラ','フィン']; const suf=['リア','ガルド','ノート','ディア','ハイム','フォルド','シア']; const name=rng.pick(pre)+rng.pick(suf); const tags=rng.pick([['kingdom','guild'],['forest','dragon'],['desert','trade'],['snow','ruins']]); const spot=rng.pick(pack.startSpots||['王都ミルゼ','ギルド街レイン','辺境エルド林','港湾ナイル']); return new World({name,tags,spot}); }
+}
+class Avatar{
+  static render(svg, seed){ const rng=new RNG(seed); const skin=`hsl(${rng.range(20,40)},30%,${rng.range(55,70)}%)`; const hair=`hsl(${rng.range(0,360)},45%,${rng.range(25,40)}%)`; const eye=`hsl(${rng.range(180,260)},70%,${rng.range(45,60)}%)`; const deco=`hsl(${rng.range(0,360)},70%,60%)`; const NS='http://www.w3.org/2000/svg'; const S=(t,a)=>{const e=document.createElementNS(NS,t); for(const k in a)e.setAttribute(k,a[k]); return e}; svg.innerHTML=''; svg.appendChild(S('rect',{x:0,y:0,width:120,height:120,rx:12,fill:'color-mix(in srgb,var(--card) 85%, #000 15%)'})); svg.appendChild(S('circle',{cx:60,cy:70,r:38,fill:skin})); svg.appendChild(S('ellipse',{cx:60,cy:40,rx:42,ry:28,fill:hair})); svg.appendChild(S('circle',{cx:46,cy:70,r:6,fill:eye})); svg.appendChild(S('circle',{cx:74,cy:70,r:6,fill:eye})); svg.appendChild(S('rect',{x:38,y:94,width:44,height:8,rx:4,fill:deco,opacity:.4})); }
+}
+class Cheat{ constructor(obj){Object.assign(this,obj)} }
+class Vow{ constructor(obj){Object.assign(this,obj)} }
+class Encounter{ constructor(obj){Object.assign(this,obj)} }
+
+/***********************
+ *  Pack 管理
+ ***********************/
+class Pack{
+  constructor(obj){ Object.assign(this, obj) }
+  static default(){ return new Pack({
+    packId:'foundry-default-v2', title:'High Fantasy / Guild',
+    worldTags:['kingdom','guild','dragon','forest'], startSpots:['王都ミルゼ','ギルド街レイン','辺境エルド林','港湾ナイル'],
+    goddessLines:['……ようこそ、新たな旅路へ。','魂は巡り、物語は再び灯る。','選びなさい。力も、縛りも、すべては君の意志。'],
+    cheats:[
+      new Cheat({id:'chrono-needle',rank:'S',name:'未来視の秒針',fd:3,desc:'選択肢の成功率を薄く可視化',effect:{reveal:true}}),
+      new Cheat({id:'omni-tongue',rank:'S',name:'万物言語',fd:3,desc:'交渉+20%',effect:{social:+0.20}}),
+      new Cheat({id:'swift-evade',rank:'A',name:'迅速回避',fd:2,desc:'危険イベントで一度だけ自動回避',effect:{autoevade:1}}),
+      new Cheat({id:'spark-create',rank:'A',name:'創造の火花',fd:2,desc:'クラフト判定+15%、初期資源+1',effect:{craft:+0.15,resource:+1}}),
+      new Cheat({id:'lucky-feather',rank:'B',name:'幸運の羽根',fd:1,desc:'レアイベント+5%',effect:{rare:+0.05}}),
+      new Cheat({id:'shadow-step',rank:'B',name:'影渡り',fd:1,desc:'奇襲+10%',effect:{combat:+0.10}})
+    ],
+    encounters:[
+      new Encounter({id:'e001',type:'Combat',title:'古森の魔狼',stat:'DEX',base:0.55,reward:8}),
+      new Encounter({id:'e002',type:'Social',title:'王都の許可証',stat:'CHA',base:0.50,reward:6}),
+      new Encounter({id:'e003',type:'Explore',title:'地下水路の地図',stat:'INT',base:0.52,reward:7}),
+      new Encounter({id:'e004',type:'Combat',title:'竜の鱗の盗賊',stat:'STR',base:0.48,reward:9}),
+      new Encounter({id:'e005',type:'Social',title:'ギルド交渉',stat:'CHA',base:0.53,reward:7}),
+      new Encounter({id:'e006',type:'Explore',title:'古代碑文の解読',stat:'INT',base:0.54,reward:8})
+    ],
+    titles:[
+      {id:'t_small_miracle', name:'小さき奇跡', cond:(ctx)=>ctx.legend>=10},
+      {id:'t_vowbound', name:'契約の導き', cond:(ctx)=>ctx.vowKept>=2},
+      {id:'t_fatebreaker', name:'運命破り', cond:(ctx)=>ctx.fd<=1 && ctx.legend>=16},
+      {id:'t_stargazer', name:'星見の旅人', cond:(ctx)=>ctx.events.Explore>=2}
+    ]
+  }) }
+}
+class PackManager{
+  constructor(){ this.active=Pack.default() }
+  apply(obj){ // shallow merge + validation
+    if(!obj||!obj.packId) throw new Error('packId missing');
+    const base=Pack.default();
+    for(const k of Object.keys(obj)){
+      if(Array.isArray(obj[k])) base[k]=obj[k]; else if(typeof obj[k]==='object') base[k]=Object.assign({}, base[k]||{}, obj[k]); else base[k]=obj[k];
+    }
+    this.active=new Pack(base); Util.toast('Pack 適用: '+(this.active.title||this.active.packId));
+  }
+  async loadFromUrl(url){ const res=await fetch(url,{mode:'cors'}); if(!res.ok) throw new Error(res.status+' '+res.statusText); const obj=await res.json(); this.apply(obj); }
+}
+
+/***********************
+ *  セーブ管理
+ ***********************/
+class Save{
+  static key='isekai_foundry_oop_v1';
+  static load(){ try{ const raw=localStorage.getItem(this.key); if(!raw) return null; const s=JSON.parse(raw); s.codex=s.codex||{}; s.codex.blessings=new Set(s.codex.blessings||[]); s.codex.titles=new Set(s.codex.titles||[]); s.codex.encounters=new Set(s.codex.encounters||[]); return s; }catch{ return null; } }
+  static save(s){ const out=JSON.stringify({ profile:s.profile, seed:s.seed, stats:s.stats?.map||s.stats, world:s.world, chosenCheat:s.chosenCheat, vow:s.vow, fd:s.fd, legend:s.legend, vowKept:s.vowKept, codex:{ blessings:[...s.codex.blessings], titles:[...s.codex.titles], encounters:[...s.codex.encounters] } }); localStorage.setItem(this.key, out); }
+  static reset(){ localStorage.removeItem(this.key); }
+  static export(){ const blob=new Blob([localStorage.getItem(this.key)||'{}'],{type:'application/json'}); const a=document.createElement('a'); a.download='isekai_foundry_save.json'; a.href=URL.createObjectURL(blob); a.click(); }
+  static async import(file){ const txt=await file.text(); const obj=JSON.parse(txt); localStorage.setItem(this.key, JSON.stringify(obj)); Util.toast('インポート完了'); }
+}
+
+/***********************
+ *  イベントエンジン（+宿敵）
+ ***********************/
+class EventEngine{
+  constructor(app){ this.app=app; this.turn=0; this.counts={Combat:0,Social:0,Explore:0}; }
+  reset(){ this.turn=0; this.counts={Combat:0,Social:0,Explore:0}; }
+  successChance(enc){ const st=this.app.stats.get(enc.stat); const base=enc.base; const ch=this.app.chosenCheat?.effect||{}; const vow=this.app.vow?0.03:0; const fd=this.app.fd * -0.03; const stat=(st-50)*0.004; let p=base + (enc.type==='Social'?(ch.social||0):0) + (enc.type==='Combat'?(ch.combat||0):0) + (enc.type==='Explore'?(ch.craft||0):0) + vow + fd + stat; if(this.app.mode==='Daily'){ p = base + fd + stat + (ch.reveal?0:0); } return Util.clamp(p,0.2,0.9); }
+  drawEncounter(){ const typeOrder=['Combat','Social','Explore']; const t=typeOrder[this.turn%3]; const list=this.app.pack.active.encounters.filter(e=>e.type===t); const rng=new RNG(this.app.seed + this.turn*1337 + this.app.fd*17); return list[rng.range(0,list.length-1)]; }
+  maybeNemesis(){ if(this.app.fd<2) return null; const rng=new RNG(this.app.seed ^ 0xdeadbeef ^ this.turn); if(!rng.chance(0.5)) return null; return new Encounter({id:'nemesis', type:'Combat', title:'宿敵との邂逅', stat:'DEX', base:0.46 - 0.03 + this.app.fd* -0.02, reward:12}); }
+  next(){ if(this.turn>=3){ // 宿敵判定
+      const n=this.maybeNemesis(); if(n){ this.renderCard(n,true); return; } this.app.finalize(); return; }
+    const enc=this.drawEncounter(); this.renderCard(enc,false); }
+  resolve(enc, p, mod){ const rng=new RNG(this.app.seed ^ ((this.turn+1)<<5)); const auto=(this.app.chosenCheat?.effect?.autoevade>0 && enc.type==='Combat'); let ok; if(auto){ ok=true; this.app.chosenCheat.effect.autoevade--; } else ok = rng.next() < (p+mod); this.counts[enc.type]++; this.app.codex.encounters.add(enc.id); if(ok){ this.app.legend += enc.reward; Sound.beep(true); } else { this.app.legend += 2; Sound.beep(false); } this.turn++; Util.$('#legendLbl').textContent=this.app.legend; }
+  renderCard(enc,isNemesis){ const wrap=Util.$('#encCard'); wrap.innerHTML=''; wrap.appendChild(Util.el('div',{class:'badge',text:(isNemesis?'NEMESIS':'遭遇')+` / ${enc.type} / 要求:${enc.stat}`})); wrap.appendChild(Util.el('h3',{text:enc.title})); const p=this.successChance(enc); if(this.app.chosenCheat?.effect?.reveal){ wrap.appendChild(Util.el('div',{class:'hint',text:`成功率の予感: ${(p*100).toFixed(0)}%`})); } const a=Util.el('button',{class:'btn primary',text:'A) 正面から挑む',onclick:()=>{this.resolve(enc,p,+0.00);}}); const b=Util.el('button',{class:'btn',text:'B) 様子をうかがう',onclick:()=>{this.resolve(enc,Util.clamp(p+0.05,0,1),-0.02);}}); wrap.appendChild(Util.el('div',{class:'row',style:'margin-top:8px'},[a,b])); }
+}
+
+/***********************
+ *  サマリー描画
+ ***********************/
+class Summary{
+  static draw(app){ const c=Util.$('#summaryCvs'), g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height); g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(); g.fillRect(0,0,c.width,c.height); // header
+    g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#88e0ff'; g.font='700 28px system-ui, sans-serif'; g.fillText('Isekai Foundry', 24, 42); g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#9ab0c9'; g.font='14px system-ui, sans-serif'; g.fillText(`Seed ${app.seed} • Legend ${app.legend}`, 24, 66);
+    // avatar snapshot
+    const rng=new RNG(app.seed^12345); const skin=`hsl(${rng.range(20,40)},30%,${rng.range(55,70)}%)`; const hair=`hsl(${rng.range(0,360)},45%,${rng.range(25,40)}%)`; const eye=`hsl(${rng.range(180,260)},70%,${rng.range(45,60)}%)`; g.fillStyle='rgba(0,0,0,.15)'; g.fillRect(24,86,200,200); g.fillStyle=skin; g.beginPath(); g.arc(124,186,76,0,Math.PI*2); g.fill(); g.fillStyle=hair; g.beginPath(); g.ellipse(124,154,88,56,0,0,Math.PI*2); g.fill(); g.fillStyle=eye; g.beginPath(); g.arc(96,186,12,0,Math.PI*2); g.fill(); g.beginPath(); g.arc(152,186,12,0,Math.PI*2); g.fill();
+    // world & stats
+    g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#cfe2ff'; g.font='600 16px system-ui, sans-serif'; g.fillText(app.world.name, 248, 110); g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#9ab0c9'; g.fillText(app.world.tags.join(' / '), 248, 132); g.fillText('Start: '+app.world.spot, 248, 152); let y=190; for(const [k,v] of Object.entries(app.stats.map)){ g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#9ab0c9'; g.fillText(k,248,y); g.strokeStyle='#21324b'; g.lineWidth=10; g.beginPath(); g.moveTo(300,y-6); g.lineTo(540,y-6); g.stroke(); g.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#88e0ff'; g.lineWidth=10; g.beginPath(); g.moveTo(300,y-6); g.lineTo(300+Util.clamp(v,0,120)*2,y-6); g.stroke(); y+=28; }
+    g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#cfe2ff'; g.fillText('Cheat: '+(app.chosenCheat?.name||'-'), 24, 320); g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#9ab0c9'; g.fillText('Vow: '+(app.vow?.name||'-')+` / FD ${app.fd}`, 24, 342); const titles=app.pack.active.titles.filter(t=>app.codex.titles.has(t.id)).map(t=>t.name); g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#cfe2ff'; g.fillText('Legend '+app.legend,24,372); g.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#9ab0c9'; g.fillText('Titles: '+(titles.join('、')||'—'),24,394); g.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--line').trim()||'#1b2330'; g.strokeRect(12,12,576,776); }
+}
+
+/***********************
+ *  ルーター（タブ）
+ ***********************/
+class Router{
+  static set(name){ Util.$$('.tabbtn').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===name?'true':'false')); Util.$$('.section').forEach(sec=>sec.classList.remove('active')); Util.$(`#sec-${name}`).classList.add('active'); }
+}
+
+/***********************
+ *  アプリ本体
+ ***********************/
+class App{
+  constructor(){ this.qs=new URLSearchParams(location.search); this.mode='Casual'; this.seed=null; this.profile=null; this.stats=null; this.world=null; this.cheatChoices=[]; this.chosenCheat=null; this.vow=null; this.fd=0; this.legend=0; this.vowKept=0; this.codex={ blessings:new Set(), titles:new Set(), encounters:new Set() }; this.pack=new PackManager(); this.engine=new EventEngine(this); }
+  initUI(){ // tab nav
+    Util.$$('.tabbtn').forEach(b=>b.addEventListener('click',()=>Router.set(b.dataset.tab)));
+    // buttons
+    Util.$('#btnRand').onclick=()=>Profile.randomizeToInputs();
+    Util.$('#btnMake').onclick=()=>this.startBestowal();
+    Util.$('#btnLockIn').onclick=()=>this.lockIn();
+    Util.$('#btnNextTurn').onclick=()=>this.engine.next();
+    Util.$('#btnCopy').onclick=()=>this.copyURL();
+    Util.$('#btnSavePng').onclick=()=>this.savePNG();
+    Util.$('#btnReplay').onclick=()=>Router.set('input');
+    Util.$('#btnWebShare').onclick=()=>this.webShare();
+    Util.$('#btnApplyPack').onclick=()=>this.applyPackFromTextarea();
+    Util.$('#btnLoadExample').onclick=()=>this.loadPackExample();
+    Util.$('#btnCasual').onclick=()=>this.applyMode('Casual');
+    Util.$('#btnDaily').onclick=()=>this.applyMode('Daily');
+    Util.$('#btnReset').onclick=()=>{Save.reset(); Util.toast('保存データを消去');};
+    Util.$('#btnTheme').onclick=()=>Theme.toggle();
+    Util.$('#btnSound').onclick=()=>Sound.toggle();
+    Util.$('#btnExport').onclick=()=>Save.export();
+    Util.$('#fileImport').addEventListener('change',e=>{ const f=e.target.files?.[0]; if(f) Save.import(f).then(()=>location.reload()); });
+    Util.$('#btnRegisterSW').onclick=()=>this.registerSW();
+  }
+  async init(){ Theme.load(); const s=Save.load(); if(s){ this.codex.blessings=s.codex.blessings; this.codex.titles=s.codex.titles; this.codex.encounters=s.codex.encounters; }
+    // mode by seed param
+    const seedParam=this.qs.get('seed'); if(seedParam && /^\d{8}$/.test(seedParam)) this.applyMode('Daily'); else this.applyMode('Casual');
+    // packUrl
+    const packUrl=this.qs.get('packUrl'); if(packUrl){ try{ await this.pack.loadFromUrl(packUrl); }catch(e){ Util.toast('Pack読込失敗: '+e.message); } }
+    this.renderCodex(); }
+  applyMode(mode){ this.mode=mode; Util.$('#modeLbl').textContent=mode; if(mode==='Daily') this.seed=parseInt(this.qs.get('seed')||Util.todaySeed(),10); Util.$('#seedLbl').textContent=this.seed||'-'; }
+  startBestowal(){ this.profile=Profile.fromInputs(); let seed=parseInt(this.qs.get('seed')||'',10); if(this.mode==='Daily'){ seed = parseInt(this.qs.get('seed')||Util.todaySeed(),10); } if(!seed||isNaN(seed)) seed=this.profile.seed(); this.seed=seed; Util.$('#seedLbl').textContent=this.seed; // build
+    this.stats=Stats.generate(seed); this.world=World.build(seed,this.pack.active); this.legend=0; this.fd=0; this.chosenCheat=null; this.vow=null; this.cheatChoices=[...this.pack.active.cheats].sort(()=>Math.random()-.5).slice(0,3); // ui
+    this.updateBestowUI(); Router.set('bestow'); Save.save(this); }
+  updateBestowUI(){ Util.$('#worldName').textContent=this.world.name; Util.$('#worldTags').textContent=this.world.tags.join(' / '); Util.$('#startSpot').textContent='開始地：'+this.world.spot; const tbody=Util.$('#statTbody'); tbody.innerHTML=''; for(const [k,v] of Object.entries(this.stats.map)){ tbody.appendChild(Util.el('tr',{},[Util.el('th',{text:k}), Util.el('td',{html:`<div class="statbar"><i style="width:${Util.clamp(v,0,120)/1.2}%"></i></div>`}), Util.el('td',{text:v})])); } Avatar.render(Util.$('#avatar'), this.seed); const list=Util.$('#cheatList'); list.innerHTML=''; this.cheatChoices.forEach(ch=>{ const rareClass = ch.rank==='S'?'rS':(ch.rank==='A'?'rA':'rB'); const c=Util.el('div',{class:'card'},[ Util.el('div',{class:'rarity '+rareClass, text:`${ch.rank} / ${ch.name}`}), Util.el('div',{class:'hint', text:ch.desc}), Util.el('div',{class:'hint', text:`FD +${ch.fd}`}) ]); c.appendChild(Util.el('div',{style:'margin-top:6px'},[ Util.el('button',{class:'btn',text:'これにする',onclick:()=>this.chooseCheat(ch)}) ])); list.appendChild(c); }); }
+  chooseCheat(ch){ this.chosenCheat=ch; this.fd=ch.fd|0; Router.set('choose'); this.renderChoose(); }
+  renderChoose(){ const wrap=Util.$('#chosenCheat'); wrap.innerHTML=''; if(!this.chosenCheat){ wrap.appendChild(Util.el('div',{class:'hint',text:'チートを選択してください'})); return; } wrap.appendChild(Util.el('span',{class:'badge',text:`選択: ${this.chosenCheat.name} / FD ${this.chosenCheat.fd}`})); const vows=[ new Vow({id:'v_truth',name:'嘘をつかない',mod:{vow:-1}}), new Vow({id:'v_help',name:'弱者を見捨てない',mod:{vow:-1}}), new Vow({id:'v_noforb',name:'禁呪を使わない',mod:{vow:-1}}) ]; const box=Util.$('#vowList'); box.innerHTML=''; vows.forEach(v=>{ const b=Util.el('button',{class:'btn ghost',text:v.name,onclick:()=>{ this.vow=v; Util.$('#btnLockIn').disabled=false; Util.$$('#vowList .btn').forEach(x=>x.classList.remove('ok')); b.classList.add('ok'); }}); box.appendChild(b); }); }
+  lockIn(){ if(!this.vow) return; this.fd=Math.max(0,(this.fd|0)-1); if(this.chosenCheat) this.codex.blessings.add(this.chosenCheat.id); Router.set('prologue'); this.startPrologue(); }
+  startPrologue(){ Util.$('#goddessLine').textContent='女神：「'+ this.pickGoddessLine() +'」'; this.engine.reset(); this.engine.next(); }
+  pickGoddessLine(){ const lines=this.pack.active.goddessLines||['……ようこそ']; const rng=new RNG(this.seed^0x9e3779b9); return lines[rng.range(0,lines.length-1)]; }
+  finalize(){ // titles
+    const ctx={legend:this.legend, vowKept:this.vowKept, fd:this.fd, events:this.engine.counts}; const gained=this.pack.active.titles.filter(t=>t.cond(ctx)); gained.forEach(t=>this.codex.titles.add(t.id)); // share url
+    const url=new URL(location.href); url.searchParams.set('seed',String(this.mode==='Daily'? (this.qs.get('seed')||Util.todaySeed()) : this.seed)); Util.$('#shareUrl').value=url.toString(); // result text
+    Util.$('#resultText').innerHTML=`<div class="row"><span class="badge">世界: ${this.world.name}</span><span class="badge">開始地: ${this.world.spot}</span></div>
+      <div style="margin-top:6px">チート: <b>${this.chosenCheat?.name||'-'}</b> / 誓約: <b>${this.vow?.name||'-'}</b> / FD: <b>${this.fd}</b></div>
+      <div>Legend: <b>${this.legend}</b> / 称号: <b>${gained.map(t=>t.name).join('、')||'—'}</b></div>`; Summary.draw(this); Router.set('result'); Save.save(this); this.renderCodex(); }
+  copyURL(){ navigator.clipboard.writeText(Util.$('#shareUrl').value).then(()=>Util.toast('URLをコピーしました')).catch(()=>Util.toast('コピー失敗')) }
+  savePNG(){ const a=document.createElement('a'); a.download='Isekai_Summary.png'; a.href=Util.$('#summaryCvs').toDataURL('image/png'); a.click(); }
+  webShare(){ if(navigator.share){ navigator.share({title:'Isekai Foundry', text:`Legend ${this.legend} / ${this.world.name}`, url:Util.$('#shareUrl').value}).catch(()=>{}); } else { this.copyURL(); } }
+  renderCodex(){ const totalBless=this.pack.active.cheats.length; const totalTitles=this.pack.active.titles.length; const totalEnc=this.pack.active.encounters.length; Util.$('#codBless').textContent=`${this.codex.blessings.size}/${totalBless}`; Util.$('#codTitles').textContent=`${this.codex.titles.size}/${totalTitles}`; Util.$('#codEncounter').textContent=`${this.codex.encounters.size}/${totalEnc}`; const totalPct=Math.round(((this.codex.blessings.size/totalBless)+(this.codex.titles.size/totalTitles)+(this.codex.encounters.size/totalEnc))/3*100); Util.$('#codTotal').textContent=`${isFinite(totalPct)?totalPct:0}%`; const list=Util.$('#codexList'); list.innerHTML=''; this.pack.active.cheats.forEach(ch=>{ const owned=this.codex.blessings.has(ch.id); list.appendChild(Util.el('div',{class:'card'},[ Util.el('div',{class:'rarity '+(ch.rank==='S'?'rS':ch.rank==='A'?'rA':'rB'),text:`${ch.rank} ${ch.name}`}), Util.el('div',{class:'hint',text:ch.desc}), Util.el('div',{class:'hint',text:owned?'獲得済み':'未獲得'}) ])); }); const chapters=[ {need:25,title:'最初の鈴',text:'ガチャ機の奥で、光る歯車が小さく鳴った。'}, {need:50,title:'蒐集者の約束',text:'集めることは終わりじゃない。光は演出となって残る。'}, {need:75,title:'欠片の地図',text:'未所持の空白が、次の道を指している。'}, {need:100,title:'図鑑の向こう',text:'コンプリートは合図。君の演出は誰かの挑戦を照らす。'} ]; const pct=parseInt(Util.$('#codTotal').textContent)||0; const sl=Util.$('#storyList'); sl.innerHTML=''; chapters.forEach(ch=>{ const unlocked=pct>=ch.need; sl.appendChild(Util.el('div',{class:'card'},[ Util.el('div',{class:'row'},[Util.el('span',{class:'badge',text:`${ch.need}%`}), Util.el('b',{text:ch.title})]), Util.el('div',{class:'hint',text: unlocked? ch.text : '未解放'}) ])); }); }
+  applyPackFromTextarea(){ try{ const txt=Util.$('#packJson').value.trim(); if(!txt) return; const obj=JSON.parse(txt); this.pack.apply(obj); }catch(e){ Util.toast('JSONエラー: '+e.message); } }
+  loadPackExample(){ const example={ packId:'oceanic-v1', title:'Oceanic Archipelago', worldTags:['archipelago','coral','storm'], startSpots:['港町サージ','灯台ケルン','潮騒の浜'], goddessLines:['潮が満ち、君の名を呼ぶ。','波間の光が道となる。'], cheats:[ {id:'tide-vision',rank:'A',name:'潮の先読み',fd:2,desc:'海系イベント成功+12%',effect:{craft:+0.12}}, {id:'whale-tongue',rank:'B',name:'鯨の言霊',fd:1,desc:'水上交渉+10%',effect:{social:+0.10}}, {id:'storm-leap',rank:'S',name:'嵐渡り',fd:3,desc:'一度だけ致命失敗を回避',effect:{autoevade:1}} ], encounters:[ {id:'e007',type:'Explore',title:'潮の洞窟',stat:'INT',base:0.55,reward:8}, {id:'e008',type:'Combat',title:'海賊との鍔迫り合い',stat:'DEX',base:0.5,reward:9}, {id:'e009',type:'Social',title:'港の値切り交渉',stat:'CHA',base:0.52,reward:7} ], titles:[ {id:'t_sea_star',name:'海の星',cond:(ctx)=>ctx.legend>=14} ] }; Util.$('#packJson').value=JSON.stringify(example,null,2); Util.toast('例を挿入しました'); }
+  async registerSW(){ if(!('serviceWorker' in navigator)){ Util.toast('SW未対応'); return; } const swCode=`self.addEventListener('install',e=>{e.waitUntil(caches.open('ifoundry-v1').then(c=>c.addAll(['./'])))});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`; const blob=new Blob([swCode],{type:'text/javascript'}); const url=URL.createObjectURL(blob); try{ const reg=await navigator.serviceWorker.register(url); Util.toast('オフライン対応を登録しました'); }catch(e){ Util.toast('PWA登録失敗: '+e.message); }
+  }
+}
+
+/***********************
+ *  起動
+ ***********************/
+const app=new App();
+app.initUI();
+app.init();
+</script>
+</body>
+</html>
